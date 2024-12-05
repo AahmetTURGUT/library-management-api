@@ -1,0 +1,4 @@
+{
+    "entryPoints": ["server.ts","./enums/index.ts","./interfaces","./logger","./models/index.ts","./routes/index.ts","./utils"],
+    "out": "docs"
+  }
