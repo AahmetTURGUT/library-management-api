@@ -6,7 +6,16 @@ dotenv.config({
 import express from "express";
 import dbConfig from "./db/sequelize";
 import { DB } from "./models";
+import {
+  BookRoute,
+  UserRoute,
+} from "./routes";
 import cors = require("cors");
+import {
+  BookService,
+  UserService,
+  BorrowedService
+} from "./services";
 
 const compression = require("compression");
 
@@ -17,6 +26,13 @@ const compression = require("compression");
 export class Server {
   public db: DB;
   public app: express.Application;
+
+  private userService: UserService;
+  private bookService: BookService;
+  private borrowedService: BorrowedService;
+
+  private userRoute: UserRoute;
+  private bookRoute: BookRoute;
 
 
   constructor() {
@@ -45,7 +61,7 @@ export class Server {
     });
   }
 
-  
+
   private connectToDb() {
     return new Promise((resolve, reject) => {
       dbConfig
@@ -117,15 +133,33 @@ export class Server {
       preflightContinue: false,
     };
     this.app.use(cors(options));
+    this.app.use("/users", this.userRoute.getRouter());
+    this.app.use("/books", this.bookRoute.getRouter());
   }
 
   private setDatabaseInstance() {
     this.db = new DB();
   }
 
- 
+
   private setUtilAndRouteInstances() {
-   
+    this.userService = new UserService(this.db.User);
+    this.bookService = new BookService(this.db.Book);
+    this.borrowedService = new BorrowedService(
+      this.userService,
+      this.bookService,
+      this.db.BorrowedBook
+    );
+
+    this.userRoute = new UserRoute(
+      this.userService,
+      this.borrowedService,
+    );
+
+    this.bookRoute = new BookRoute(
+      this.bookService
+    );
+
   }
 }
 
